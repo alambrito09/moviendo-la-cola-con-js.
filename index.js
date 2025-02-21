@@ -105,8 +105,8 @@ const colaCanciones = new Cola();
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static('public'));
 
-const clientId = '3f4dc063df694d53b5e668cff24affbe';
-const clientSecret = 'b8a3df837f8847acb54bfca2c894df85';
+const clientId = 'nose muestra pa ';
+const clientSecret = 'ni te lo creas uwu';
 const redirectUri = 'http://localhost:8888/callback';
 
 app.get('/', (req, res) => {
