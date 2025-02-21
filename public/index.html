@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cola de Reproducción Spotify</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #121212;
+            color: white;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+        .player-container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+        .playlist-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 400px;
+        }
+        #cola {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+        #cola li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #3E3E3E;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .player-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .current-song {
+            background: #3E3E3E;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .current-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .spotify-player {
+            flex: 1;
+            min-height: 380px;
+            border: none;
+            border-radius: 8px;
+            background-color: #181818;
+        }
+        .song-info {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 10px;
+        }
+        .song-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+        }
+        .controls {
+            padding: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #1DB954;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1ed760;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 24px;
+        }
+        /* Estilos para la página de inicio */
+        .welcome-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+            background: linear-gradient(45deg, #1DB954, #1ed760);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-title {
+            font-size: 48px;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .spotify-logo {
+            width: 280px;  /* Cambiado de 80px a 280px para hacerlo más ancho */
+            height: auto;  /* Cambiado para mantener la proporción */
+            margin-bottom: 30px;
+            object-fit: contain;
+        }
+
+        #login button {
+            font-size: 18px;
+            padding: 15px 40px;
+            border-radius: 30px;
+            background-color: #191414;
+            transition: transform 0.3s, background-color 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        #login button:hover {
+            transform: scale(1.05);
+            background-color: #282828;
+        }
+
+        .welcome-text {
+            font-size: 20px;
+            margin-bottom: 40px;
+            color: rgba(255,255,255,0.9);
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        .user-welcome {
+            font-size: 24px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .user-title {
+            font-size: 28px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(45deg, #1DB954, #1ed760);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        /* Añadir estilos para el botón de prioridad */
+        .priority-button {
+            background-color: #FFD700;
+            margin-left: 5px;
+            padding: 5px 10px;
+        }
+        .priority-button:hover {
+            background-color: #FFC000;
+        }
+        /* Agregar en la sección de estilos del HTML */
+        .delete-button {
+            background-color: #ff4444;
+            margin-left: 5px;
+            padding: 5px 10px;
+        }
+
+        .delete-button:hover {
+            background-color: #cc0000;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="redirect-message" style="display: none; background-color: #f8d7da; color: #721c24; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            ⚠️ Redirigiendo a http://localhost:8888...
+            <br>
+            Si no eres redirigido automáticamente, <a href="http://localhost:8888">haz clic aquí</a>
+        </div>
+        <div id="login">
+            <div class="welcome-container">
+                <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_White.png" 
+                     alt="Spotify Logo" 
+                     class="spotify-logo">
+                <h1 class="welcome-title">¡Bienvenido a tu Reproductor Musical!</h1>
+                <p class="welcome-text">
+                    Descubre y disfruta de tus canciones favoritas con una experiencia única de reproducción.
+                    Conecta con tu cuenta de Spotify para comenzar.
+                </p>
+                <button onclick="window.location.href='/login'">
+                    <i class="fab fa-spotify"></i> Iniciar sesión con Spotify
+                </button>
+            </div>
+        </div>
+        <div id="player" style="display: none;">
+            <div id="status" class="status" style="display: none;"></div>
+            <h1 id="userName" class="user-title">Cola de reproducción</h1>
+            <div class="player-container">
+                <div class="playlist-section">
+                    <ul id="cola"></ul>
+                    <div class="controls">
+                        <button id="reproducir"> Siguiente</button>
+                        <button id="actualizar">Actualizar Cola</button>
+                    </div>
+                </div>
+                <div class="player-section">
+                    <div class="current-song" id="current-song">
+                        <img id="current-image" class="current-image" src="" alt="Portada del álbum">
+                        <div class="current-details">
+                            <h3 id="current-name"></h3>
+                            <p id="current-artist"></p>
+                        </div>
+                    </div>
+                    <iframe id="spotify-player" 
+                            class="spotify-player"
+                            src="about:blank" 
+                            frameborder="0" 
+                            allowtransparency="true" 
+                            allow="encrypted-media">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Código de redirección mejorado
+        if (window.location.protocol === 'file:') {
+            document.getElementById('redirect-message').style.display = 'block';
+            setTimeout(() => {
+                window.location.href = 'http://localhost:8888';
+            }, 2000);
+        }
+
+        class ColaReproductor {
+            constructor() {
+                this.cola = [];
+                this.userName = '';
+                this.init();
+            }
+
+            async obtenerNombreUsuario(accessToken) {
+                try {
+                    const response = await fetch(`/me?access_token=${accessToken}`);
+                    const data = await response.json();
+                    const titulo = document.getElementById('userName');
+                    titulo.textContent = `Cola de reproducción de top 10 canciones de ${data.name}`;
+                } catch (error) {
+                    console.error('Error al obtener el nombre de usuario:', error);
+                }
+            }
+
+            async init() {
+                const params = new URLSearchParams(window.location.search);
+                const accessToken = params.get('access_token');
+                const error = params.get('error');
+                
+                if (error) {
+                    this.mostrarMensaje('Error de autenticación', 'error');
+                    return;
+                }
+                
+                if (accessToken) {
+                    document.getElementById('login').style.display = 'none';
+                    document.getElementById('player').style.display = 'block';
+                    await this.obtenerNombreUsuario(accessToken);
+                    await this.cargarCanciones(accessToken);
+                }
+            }
+
+            mostrarMensaje(mensaje, tipo) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.textContent = mensaje;
+                statusDiv.className = `status ${tipo}`;
+                statusDiv.style.display = 'block';
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            }
+
+            async cargarCanciones(accessToken) {
+                try {
+                    const response = await fetch(`/top-tracks?access_token=${accessToken}`);
+                    if (!response.ok) throw new Error('Error al cargar canciones');
+                    this.cola = await response.json();
+                    this.actualizarInterfaz();
+                    this.mostrarMensaje('Canciones cargadas exitosamente', 'success');
+                } catch (error) {
+                    this.mostrarMensaje(error.message, 'error');
+                }
+            }
+
+            actualizarInterfaz() {
+                const lista = document.getElementById('cola');
+                lista.innerHTML = '';
+                this.cola.forEach((cancion, index) => {
+                    const item = document.createElement('li');
+                    const songInfo = document.createElement('div');
+                    songInfo.className = 'song-info';
+                    
+                    // Agregar imagen de la canción
+                    const image = document.createElement('img');
+                    image.src = cancion.imageUrl;
+                    image.alt = `${cancion.name} portada`;
+                    image.className = 'song-image';
+                    
+                    // Contenedor para los detalles de la canción
+                    const songDetails = document.createElement('div');
+                    songDetails.className = 'song-details';
+                    
+                    const title = document.createElement('span');
+                    title.textContent = `${index + 1}. ${cancion.name} - ${cancion.artist}`;
+                    songDetails.appendChild(title);
+                    
+                    const buttonsContainer = document.createElement('div');
+                    buttonsContainer.className = 'buttons-container';
+
+                    // Botón de reproducción
+                    const playButton = document.createElement('button');
+                    playButton.textContent = '▶';
+                    playButton.onclick = async (e) => {
+                        e.stopPropagation();
+                        this.actualizarReproductor(cancion);
+                        // ... existing play button code ...
+                        const response = await fetch('/queue/play', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ url: cancion.url })
+                        });
+                        const data = await response.json();
+                        
+                        // Actualizar la cola local
+                        this.cola = data.canciones;
+                        this.actualizarInterfaz();
+                        
+                        // Mostrar mensaje
+                        this.mostrarMensaje(`Reproduciendo: ${cancion.name}`, 'success');
+                    };
+
+                    // Botón de prioridad
+                    const priorityButton = document.createElement('button');
+                    priorityButton.textContent = '⭐';
+                    priorityButton.className = 'priority-button';
+                    priorityButton.title = 'Establecer como próxima';
+                    priorityButton.onclick = async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const response = await fetch('/queue/priority', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ url: cancion.url })
+                            });
+                            
+                            if (!response.ok) throw new Error('Error al establecer prioridad');
+                            
+                            const data = await response.json();
+                            this.cola = data.canciones;
+                            this.actualizarInterfaz();
+                            this.mostrarMensaje('Canción establecida como próxima', 'success');
+                        } catch (error) {
+                            this.mostrarMensaje(error.message, 'error');
+                        }
+                    };
+
+                    // Botón de eliminar
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = '🗑️';
+                    deleteButton.className = 'delete-button';
+                    deleteButton.title = 'Eliminar de la cola';
+                    deleteButton.onclick = async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const response = await fetch('/queue/delete', {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ url: cancion.url })
+                            });
+
+                            if (!response.ok) throw new Error('Error al eliminar la canción');
+
+                            const data = await response.json();
+                            this.cola = data.canciones;
+                            this.actualizarInterfaz();
+                            this.mostrarMensaje('Canción eliminada de la cola', 'success');
+                        } catch (error) {
+                            this.mostrarMensaje(error.message, 'error');
+                        }
+                    };
+
+                    buttonsContainer.appendChild(playButton);
+                    buttonsContainer.appendChild(priorityButton);
+                    buttonsContainer.appendChild(deleteButton);
+                    songInfo.appendChild(buttonsContainer);
+                    songInfo.appendChild(image);
+                    songInfo.appendChild(songDetails);
+                    item.appendChild(songInfo);
+                    lista.appendChild(item);
+                });
+            }
+
+            // Nuevo método para actualizar el reproductor y la imagen
+            actualizarReproductor(cancion) {
+                // Mostrar la imagen y detalles de la canción actual
+                document.getElementById('current-song').style.display = 'flex';
+                document.getElementById('current-image').src = cancion.imageUrl;
+                document.getElementById('current-name').textContent = cancion.name;
+                document.getElementById('current-artist').textContent = cancion.artist;
+
+                // Actualizar el reproductor de Spotify
+                const embedUrl = cancion.url.replace('spotify.com/', 'spotify.com/embed/');
+                document.getElementById('spotify-player').src = embedUrl;
+            }
+
+            async reproducirSiguiente() {
+                try {
+                    const response = await fetch('/queue/next');
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        if (data.necesitaActualizar) {
+                            this.mostrarMensaje('No hay más canciones. ¡Actualiza la cola!', 'error');
+                            document.getElementById('reproducir').disabled = true;
+                        }
+                        throw new Error(data.error);
+                    }
+
+                    const { cancion } = data;
+                    
+                    // Actualizar reproductor e imagen
+                    this.actualizarReproductor(cancion);
+                    
+                    // Actualizar la cola local
+                    this.cola = await fetch('/queue').then(res => res.json());
+                    this.actualizarInterfaz();
+                    
+                    // Mostrar mensaje
+                    this.mostrarMensaje(`Reproduciendo: ${cancion.name}`, 'success');
+                    
+                } catch (error) {
+                    this.mostrarMensaje(error.message, 'error');
+                }
+            }
+
+            async actualizarCola() {
+                const params = new URLSearchParams(window.location.search);
+                const accessToken = params.get('access_token');
+                if (!accessToken) {
+                    this.mostrarMensaje('Necesitas iniciar sesión', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/queue?update=true&access_token=${accessToken}`);
+                    if (!response.ok) throw new Error('Error al actualizar la cola');
+                    this.cola = await response.json();
+                    this.actualizarInterfaz();
+                    // Habilitar el botón de reproducir
+                    document.getElementById('reproducir').disabled = false;
+                    this.mostrarMensaje('Cola actualizada con nuevas canciones', 'success');
+                } catch (error) {
+                    this.mostrarMensaje(error.message, 'error');
+                }
+            }
+        }
+
+        const reproductor = new ColaReproductor();
+        
+        document.getElementById('reproducir').addEventListener('click', () => {
+            reproductor.reproducirSiguiente();
+        });
+
+        document.getElementById('actualizar').addEventListener('click', () => {
+            reproductor.actualizarCola();
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</body>
+</html>
